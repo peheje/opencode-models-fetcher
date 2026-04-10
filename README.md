@@ -1,15 +1,14 @@
-# poe-models-config
+# Poe Models Config Generator
 
-To install dependencies:
+Fetch latest Poe models and generate an `opencode` config file.
 
-```bash
-bun install
-```
-
-To run:
+## Usage
 
 ```bash
-bun run index.ts
+bun run poe-models-config.ts --key <POE_API_KEY> [options]
 ```
 
-This project was created using `bun init` in bun v1.3.11. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+### Options
+- `-k, --key <API_KEY>`: Poe API key (required)
+- `-o, --output <PATH>`: Output path (default: `~/.config/opencode/opencode.jsonc`)
+- `-h, --help`: Show help message
