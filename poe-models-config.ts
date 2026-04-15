@@ -131,18 +131,11 @@ function mapModel(poeModel: PoeModel): OpencodeModel {
   }
 }
 
-async function fetchPoeModels(apiKey: string): Promise<PoeApiResponse> {
-  const response = await fetch(POE_API_URL, {
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-  })
-
+async function fetchPoeModels(): Promise<PoeApiResponse> {
+  const response = await fetch(POE_API_URL)
   if (!response.ok) {
     throw new Error(`Poe API error: ${response.status} ${response.statusText}`)
   }
-
   return response.json() as Promise<PoeApiResponse>
 }
 
@@ -174,10 +167,31 @@ async function question(prompt: string): Promise<string> {
 }
 
 async function main() {
+  const SERIOUS_OWNERS = [
+    "Anthropic",
+    "Google",
+    "OpenAI",
+    "XAI",
+    "DeepInfra",
+    "Fireworks AI",
+    "Together AI",
+    "Novita AI",
+    "Empirio Labs AI",
+    "Bytedance",
+    "Mistral",
+    "Reka AI",
+    "CerebrasAI",
+    "Minimax",
+    "Upstage",
+    "Hyperbolic",
+  ]
+
+  const isSerious = (ownedBy: string) => SERIOUS_OWNERS.includes(ownedBy)
+
   const args = parseArgs({
     options: {
-      key: { type: "string", short: "k" },
       output: { type: "string", short: "o", default: DEFAULT_OUTPUT },
+      serious: { type: "boolean", short: "S", default: false },
       help: { type: "boolean", short: "h", default: false },
     },
     allowPositionals: true,
@@ -188,24 +202,14 @@ async function main() {
 Poe Models Config Generator
 
 Usage:
-  bun run src/index.ts --key <POE_API_KEY> [options]
+  bun run poe-models-config.ts [options]
 
 Options:
-  -k, --key <API_KEY>       Poe API key (required)
   -o, --output <PATH>       Output config path (default: ~/.config/opencode/opencode.jsonc)
+  -S, --serious             Only include models from serious AI labs (Anthropic, Google, OpenAI, etc.)
   -h, --help                Show this help message
-
-Example:
-  bun run src/index.ts --key sk-test-12345
 `)
     process.exit(0)
-  }
-
-  const apiKey = args.values.key ?? (args.positionals[0] as string | undefined)
-  if (!apiKey) {
-    console.error("Error: API key is required. Use --key or pass as positional argument.")
-    console.error("Run with --help for usage information.")
-    process.exit(1)
   }
 
   const outputPath = args.values.output!.replace(/^~/, process.env.HOME ?? "")
@@ -213,7 +217,7 @@ Example:
   console.log("Fetching models from Poe API...")
   let poeData: PoeApiResponse
   try {
-    poeData = await fetchPoeModels(apiKey)
+    poeData = await fetchPoeModels()
   } catch (err) {
     console.error(`Error fetching models: ${err instanceof Error ? err.message : String(err)}`)
     process.exit(1)
@@ -223,6 +227,7 @@ Example:
 
   const models: Record<string, OpencodeModel> = {}
   for (const model of poeData.data) {
+    if (args.values.serious && !isSerious(model.owned_by)) continue
     models[model.id] = mapModel(model)
   }
 
