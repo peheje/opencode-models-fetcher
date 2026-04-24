@@ -1,0 +1,9 @@
+{
+  "name": "opencode-models-fetcher",
+  "private": true,
+  "scripts": {
+    "update:openrouter": "bun run openrouter-models-config.ts",
+    "install:openrouter": "bun run openrouter-models-config.ts --install",
+    "update:poe": "bun run poe-models-config.ts"
+  }
+}
